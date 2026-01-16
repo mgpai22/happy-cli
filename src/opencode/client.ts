@@ -62,6 +62,7 @@ export class OpenCodeClient {
         ...this.getAuthHeader(),
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({}),
     });
 
     if (!response.ok) {
@@ -92,8 +93,7 @@ export class OpenCodeClient {
       throw new Error(`Failed to list sessions: ${response.status}`);
     }
 
-    const data = await response.json() as { sessions?: OpenCodeSession[] };
-    return data.sessions || [];
+    return response.json() as Promise<OpenCodeSession[]>;
   }
 
   async sendMessage(

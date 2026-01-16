@@ -1,9 +1,19 @@
 export interface OpenCodeSession {
   id: string;
+  slug?: string;
+  version?: string;
+  projectID?: string;
+  directory?: string;
   title?: string;
-  path?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  time?: {
+    created: number;
+    updated: number;
+  };
+  summary?: {
+    additions: number;
+    deletions: number;
+    files: number;
+  };
 }
 
 export interface OpenCodeMessage {
@@ -27,7 +37,7 @@ export interface OpenCodeEvent {
 }
 
 export interface OpenCodeHealthResponse {
-  status: string;
+  healthy: boolean;
   version?: string;
 }
 
