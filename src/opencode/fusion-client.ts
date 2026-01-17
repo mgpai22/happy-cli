@@ -1,10 +1,8 @@
-import {
-  OPENCODE_SERVER_URL_ENV,
-  DEFAULT_OPENCODE_SERVER_URL,
-} from './constants';
+import { OpenCodeClient } from './client';
 
 export const FUSION_API_URL_ENV = 'FUSION_API_URL';
 export const FUSION_API_TOKEN_ENV = 'FUSION_API_TOKEN';
+export const FUSION_OPENCODE_PASSWORD_ENV = 'FUSION_OPENCODE_PASSWORD';
 export const DEFAULT_FUSION_API_URL = 'http://localhost:8787';
 
 export interface FusionSession {
@@ -216,5 +214,36 @@ export class FusionClient {
     }
     
     throw new Error('Timeout waiting for session to be ready');
+  }
+
+  createOpenCodeClient(session: FusionSession): OpenCodeClient {
+    if (!session.sandboxIp) {
+      throw new Error('Session does not have a sandbox IP');
+    }
+
+    const password = process.env[FUSION_OPENCODE_PASSWORD_ENV];
+    return new OpenCodeClient({
+      serverUrl: `http://${session.sandboxIp}:4096`,
+      password,
+    });
+  }
+
+  async createOpenCodeSession(session: FusionSession): Promise<{ client: OpenCodeClient; sessionId: string }> {
+    const client = this.createOpenCodeClient(session);
+    
+    const maxRetries = 5;
+    let lastError: Error | null = null;
+    
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const openCodeSession = await client.createSession();
+        return { client, sessionId: openCodeSession.id };
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+    
+    throw lastError || new Error('Failed to create OpenCode session');
   }
 }
